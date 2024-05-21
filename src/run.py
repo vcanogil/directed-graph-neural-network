@@ -1,3 +1,4 @@
+#%%
 import os
 import numpy as np
 import uuid
@@ -27,12 +28,14 @@ def run(args):
         transpose=args.transpose,
     )
     data = dataset._data
+    breakpoint()
     data_loader = DataLoader(FullBatchGraphDataset(data), batch_size=1, collate_fn=lambda batch: batch[0])
 
     val_accs, test_accs = [], []
     for num_run in range(args.num_runs):
         # Get train/val/test splits for the current run
         train_mask, val_mask, test_mask = get_dataset_split(args.dataset, data, args.dataset_directory, num_run)
+        breakpoint()
 
         # Get model
         args.num_features, args.num_classes = data.num_features, dataset.num_classes
