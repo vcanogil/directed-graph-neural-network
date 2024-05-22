@@ -2,9 +2,10 @@
 import networkx as nx
 from rdkit import Chem
 from rdkit.Chem import rdPartialCharges
+import numpy as np
 
 # Load the molecule
-mol = Chem.MolFromSmiles('COCCCCl')
+mol = Chem.MolFromSmiles('CN1CCC[C@H]1c1cccnc1')
 
 # Compute Gasteiger charges
 rdPartialCharges.ComputeGasteigerCharges(mol)
@@ -15,13 +16,13 @@ G = nx.DiGraph()
 # Add nodes for atoms
 for atom in mol.GetAtoms():
     G.add_node(atom.GetIdx(),
-               atomic_num=atom.GetAtomicNum(),
-               formal_charge=atom.GetFormalCharge(),
-               chiral_tag=atom.GetChiralTag(),
-               hybridization=atom.GetHybridization(),
-               num_explicit_hs=atom.GetNumExplicitHs(),
-               is_aromatic=atom.GetIsAromatic(),
-               gasteiger_charge=atom.GetProp('_GasteigerCharge'))
+    x = np.array([atom.GetAtomicNum(),
+         atom.GetFormalCharge(),
+        #  atom.GetChiralTag(),
+         atom.GetHybridization(),
+         atom.GetNumExplicitHs(),
+         atom.GetIsAromatic(),
+         atom.GetProp('_GasteigerCharge')]))
 
 # Add edges for bonds
 for bond in mol.GetBonds():
@@ -44,5 +45,24 @@ plt.show()
 # %%
 from torch_geometric.utils import from_networkx
 a = from_networkx(G)
+
+# %%
+import numpy as np
+from sklearn.preprocessing import LabelEncoder
+
+# Sample array
+vector = np.array([1, 2, 3, 1, 1, 8])
+
+# Initialize LabelEncoder
+label_encoder = LabelEncoder()
+
+# Fit and transform the vector
+encoded_vector = label_encoder.fit_transform(vector)
+
+# If the maximum possible number is 10, we need to limit the encoded values
+encoded_vector[encoded_vector >= 10] = 10
+
+print(encoded_vector)
+
 
 # %%
