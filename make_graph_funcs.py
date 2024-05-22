@@ -94,7 +94,7 @@ device = "cpu"
 #%%
 model = GCNNet(input_dim=train_loader.dataset[0].num_node_features,
                hidden_dim=10, output_dim=1).to(device)
-optimizer = torch.optim.Adam(model.parameters(), lr=0.0005, weight_decay=1e-4) #use Adam optimizer
+optimizer = torch.optim.Adam(model.parameters(), lr=5e-5, weight_decay=1e-4) #use Adam optimizer
 criterion = torch.nn.BCELoss() #define loss
 model.train()
 def train():
