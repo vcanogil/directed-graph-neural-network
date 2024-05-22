@@ -59,7 +59,7 @@ def make_pyg_graph(input_str, label,format="InChI"):
     return G
 
 def make_train_data(train_csv):
-    df = pd.read_csv(train_csv)[:10000]
+    df = pd.read_csv(train_csv)
     train_data = []
     for i,j in tqdm(zip(df['InChI'].values, df['covalent'].values)):
         graph = make_pyg_graph(i, j)
@@ -96,17 +96,18 @@ model = GCNNet(input_dim=train_loader.dataset[0].num_node_features,
                hidden_dim=10, output_dim=1).to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=5e-5, weight_decay=1e-4) #use Adam optimizer
 criterion = torch.nn.BCELoss() #define loss
-model.train()
 def train():
+    model.train()
     for idx, data in enumerate(train_loader):  # Iterate in batches over the training dataset.
-        print(f"Iteration {idx} ")
         out = model(data, data.batch).reshape(-1)  # Perform a single forward pass.
         loss = criterion(out, data.y.float())  # Compute the loss.
         loss.backward()  # Derive gradients.
         optimizer.step()  # Update parameters based on gradients.
         optimizer.zero_grad()  # Clear gradients
-        print(loss)
-train()
+    print(loss)
+
+for epoch in range(10):
+    train()
 
 # with torch.no_grad():
 #   y_pred = []
