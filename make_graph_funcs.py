@@ -2,6 +2,7 @@
 import networkx as nx
 import torch
 import pandas as pd
+from tqdm import tqdm
 from rdkit import Chem
 from rdkit.Chem import rdPartialCharges
 from torch_geometric.data import DataLoader
@@ -58,8 +59,14 @@ def make_pyg_graph(input_str, label,format="InChI"):
     return G
 
 def make_train_data(train_csv):
-    df = pd.read_csv(train_csv)
-    train_data = [make_pyg_graph(i, j) for i,j in zip(df['InChI'].values, df['covalent'].values)]
+    df = pd.read_csv(train_csv)[:10000]
+    train_data = []
+    for i,j in tqdm(zip(df['InChI'].values, df['covalent'].values)):
+        graph = make_pyg_graph(i, j)
+        if not graph:
+            continue
+        else:
+            train_data.append(graph)
     train_loader = DataLoader(train_data, batch_size=10, shuffle=True)
     return train_loader
 
@@ -79,8 +86,8 @@ class GCNNet(torch.nn.Module):
         return torch.sigmoid(x)
 
 # a = make_pyg_graph("InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H")
-train_loader = make_train_data("./victor_data/test_data_all.csv")
-# train_loader = make_train_data("./victor_data/training_data_all.csv")
+# train_loader = make_train_data("./victor_data/test_data_all.csv")
+train_loader = make_train_data("./victor_data/training_data_all.csv")
 # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') #use CUDA if available
 device = "cpu"
 
@@ -91,13 +98,14 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.0005, weight_decay=1e-4) #
 criterion = torch.nn.BCELoss() #define loss
 model.train()
 def train():
-    for data in train_loader:  # Iterate in batches over the training dataset.
-         out = model(data, data.batch).reshape(-1)  # Perform a single forward pass.
-         loss = criterion(out, data.y.float())  # Compute the loss.
-         loss.backward()  # Derive gradients.
-         optimizer.step()  # Update parameters based on gradients.
-         optimizer.zero_grad()  # Clear gradients
-         print(loss)
+    for idx, data in enumerate(train_loader):  # Iterate in batches over the training dataset.
+        print(f"Iteration {idx} ")
+        out = model(data, data.batch).reshape(-1)  # Perform a single forward pass.
+        loss = criterion(out, data.y.float())  # Compute the loss.
+        loss.backward()  # Derive gradients.
+        optimizer.step()  # Update parameters based on gradients.
+        optimizer.zero_grad()  # Clear gradients
+        print(loss)
 train()
 
 # with torch.no_grad():
